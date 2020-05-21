@@ -40,8 +40,10 @@ def load_depth_into_numpy_array(depth):
 
 
 lock = Lock()
-width = 704
-height = 416
+# width = 704
+# height = 416
+width = 1280
+height = 720
 confidence = 0.55
 
 image_np_global = np.zeros([width, height, 3], dtype=np.uint8)
@@ -66,8 +68,8 @@ def capture_thread_func(svo_filepath=None):
     init_params.camera_resolution = sl.RESOLUTION.HD720
     init_params.camera_fps = 60
     # The accuracy is not high.
-    init_params.depth_mode = sl.DEPTH_MODE.PERFORMANCE
-    # init_params.depth_mode = sl.DEPTH_MODE.ULTRA
+    # init_params.depth_mode = sl.DEPTH_MODE.PERFORMANCE
+    init_params.depth_mode = sl.DEPTH_MODE.ULTRA
     init_params.coordinate_units = sl.UNIT.METER
     init_params.svo_real_time_mode = False
 
@@ -83,6 +85,7 @@ def capture_thread_func(svo_filepath=None):
     image_mat = sl.Mat()
     depth_mat = sl.Mat()
     runtime_parameters = sl.RuntimeParameters()
+
     image_size = sl.Resolution(width, height)
 
     while not exit_signal:
@@ -118,6 +121,7 @@ def display_objects_distances(image_np, depth_np, num_detections, boxes_, classe
                 display_str = '{}: {}%'.format(display_str, int(100 * scores_[i]))
 
             # Find object distance
+            # print(box)
             ymin, xmin, ymax, xmax = box
             x_center = int(xmin * width + (xmax - xmin) * width * 0.5)
             y_center = int(ymin * height + (ymax - ymin) * height * 0.5)
@@ -135,6 +139,8 @@ def display_objects_distances(image_np, depth_np, num_detections, boxes_, classe
             if max_y_r > height: max_y_r = height
             if max_x_r > width: max_x_r = width
 
+            print(min_y_r,max_y_r)
+
             for j_ in range(min_y_r, max_y_r):
                 for i_ in range(min_x_r, max_x_r):
                     z = depth_np[j_, i_, 2]
@@ -143,10 +149,13 @@ def display_objects_distances(image_np, depth_np, num_detections, boxes_, classe
                         y_vect.append(depth_np[j_, i_, 1])
                         z_vect.append(z)
 
+            # print(x_vect, y_vect, z_vect)
+
             if len(x_vect) > 0:
                 x = statistics.median(x_vect)
                 y = statistics.median(y_vect)
                 z = statistics.median(z_vect)
+                # print(x, y, z)
                 
                 distance = math.sqrt(x * x + y * y + z * z)
 
@@ -155,6 +164,7 @@ def display_objects_distances(image_np, depth_np, num_detections, boxes_, classe
                 box_to_color_map[box] = vis_util.STANDARD_COLORS[classes_[i] % len(vis_util.STANDARD_COLORS)]
 
     for box, color in box_to_color_map.items():
+        print(box)
         ymin, xmin, ymax, xmax = box
 
         vis_util.draw_bounding_box_on_image_array(
@@ -179,35 +189,19 @@ def main(args):
     # This main thread will run the object detection, the capture thread is loaded later
 
     # What model to download and load
-    # MODEL_NAME = 'ssd_mobilenet_v1_coco_2018_01_28'
-    #MODEL_NAME = 'ssd_mobilenet_v1_fpn_shared_box_predictor_640x640_coco14_sync_2018_07_03'
 
-    # MODEL_NAME ='fast_rcnn_inception_v2_coco_myself'
     MODEL_NAME = 'fast_rcnn_inception_v2_coco_1000'
-    #MODEL_NAME = 'ssd_resnet50_v1_fpn_shared_box_predictor_640x640_coco14_sync_2018_07_03'
-    #MODEL_NAME = 'faster_rcnn_nas_coco_2018_01_28' # Accurate but heavy
 
     # Path to frozen detection graph. This is the actual model that is used for the object detection.
     PATH_TO_FROZEN_GRAPH = 'data/' + MODEL_NAME + '/frozen_inference_graph.pb'
-
 
     # Check if the model is already present
 
     # judge the path presence whether or not. If not, download it from website.
     if not os.path.isfile(PATH_TO_FROZEN_GRAPH):
-        print("Downloading model " + MODEL_NAME + "...")
-
-        MODEL_FILE = MODEL_NAME + '.tar.gz'
-        MODEL_PATH = 'data/' + MODEL_NAME + '.tar.gz'
-        DOWNLOAD_BASE = 'http://download.tensorflow.org/models/object_detection/'
-
-        opener = urllib.request.URLopener()
-        opener.retrieve(DOWNLOAD_BASE + MODEL_FILE, MODEL_PATH)
-        tar_file = tarfile.open(MODEL_PATH)
-        for file in tar_file.getmembers():
-            file_name = os.path.basename(file.name)
-            if 'frozen_inference_graph.pb' in file_name:
-                tar_file.extract(file, 'data/')
+        print("The model " + MODEL_NAME + " is not exit.")
+        print('Please check the .pb file path.')
+        os._exit(0)
 
     # List of the strings that is used to add correct label for each box.
     PATH_TO_LABELS = os.path.join('data', 'tennis_label_map.pbtxt')
@@ -222,8 +216,8 @@ def main(args):
     global image_np_global, depth_np_global, new_data, exit_signal
 
     # Load a (frozen) Tensorflow model into memory.
-    print("Loading model " + MODEL_NAME)
-    ### What this method does ?
+    print("Loading model " + PATH_TO_FROZEN_GRAPH + '\n')
+
     detection_graph = tf.Graph()
     with detection_graph.as_default():
         od_graph_def = tf.compat.v1.GraphDef()
@@ -275,7 +269,10 @@ def main(args):
 
                     num_detections_ = num_detections.astype(int)[0]
 
+                    # print(num_detections_)
+
                     # Visualization of the results of a detection.
+
                     image_np = display_objects_distances(
                         image_np,
                         depth_np,
