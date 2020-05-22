@@ -9,7 +9,10 @@ import math
 import tarfile
 import os.path
 import time
-
+import matplotlib
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+from mpl_toolkits.mplot3d import Axes3D
 from threading import Lock, Thread
 from time import sleep
 
@@ -40,7 +43,9 @@ def load_depth_into_numpy_array(depth):
     return np.array(ar).reshape((im_height, im_width, channels)).astype(np.float32)
 
 
+
 lock = Lock()
+
 # width = 704
 # height = 416
 width = 1280
@@ -74,6 +79,7 @@ def capture_thread_func(svo_filepath=None):
     init_params.coordinate_units = sl.UNIT.METER
     init_params.svo_real_time_mode = False
 
+
     # Open the camera
     err = zed.open(init_params)
     print(err)
@@ -102,8 +108,31 @@ def capture_thread_func(svo_filepath=None):
 
     zed.close()
 
+def drawPlot():
+    global xlist, ylist, zlist
 
+    # plt.xlabel("x/m")  # x轴上的名字
+    # plt.ylabel("y/m")  # y轴上的名字
+    # plt.zlabel("z/m")  # z轴上的名字
+    # fig = plt.figure()
+    # ax = Axes3D(fig)
+
+    # plt.plot(timelist, vecxlist,linestyle='--',label='没有滤波的速度曲线')
+    # plt.plot(timelist, vecxFilterlist,label='加入滤波算法后的速度曲线')
+
+    plt.plot(xlist, ylist,zlist, label='小球运动轨迹')
+    # ax.plot_surface(xlist, ylist, zlist, rstride=1, cstride=1, cmap='rainbow')
+    # plt.plot(timelist, ballx, linestyle='--', label='随时间变化x轴运动轨迹')
+    # plt.plot(timelist, refxdraw, label='参考轨迹曲线')
+
+    # plt.legend()
+    plt.show()
+
+xlist = []
+ylist = []
+zlist = []
 def display_objects_distances(image_np, depth_np, num_detections, boxes_, classes_, scores_, category_index):
+    global xlist, ylist, zlist
     box_to_display_str_map = collections.defaultdict(list)
     box_to_color_map = collections.defaultdict(str)
 
@@ -146,12 +175,16 @@ def display_objects_distances(image_np, depth_np, num_detections, boxes_, classe
                         y_vect.append(depth_np[j_, i_, 1])
                         z_vect.append(z)
 
+
             if len(x_vect) > 0:
                 x = statistics.median(x_vect)
                 y = statistics.median(y_vect)
                 z = statistics.median(z_vect)
-                # print('x:', int(x * 1000), 'y:', int(y * 1000), 'z:', int(z * 1000))
-
+                xlist.append(x)
+                ylist.append(y)
+                zlist.append(z)
+                print(x, y, z)
+                
                 distance = math.sqrt(x * x + y * y + z * z)
 
                 display_str = display_str + " " + str('% 6.2f' % distance) + " m "
@@ -176,7 +209,6 @@ def display_objects_distances(image_np, depth_np, num_detections, boxes_, classe
 
 
 def main(args):
-    last_time = 0
     svo_filepath = None
     if len(args) > 1:
         svo_filepath = args[1]
@@ -207,6 +239,7 @@ def main(args):
     print("Starting the ZED")
     capture_thread = Thread(target=capture_thread_func, kwargs={'svo_filepath': svo_filepath})
     capture_thread.start()
+
     # Shared resources
     global image_np_global, depth_np_global, new_data, exit_signal
 
@@ -230,6 +263,7 @@ def main(args):
     categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=NUM_CLASSES,
                                                                 use_display_name=True)
     category_index = label_map_util.create_category_index(categories)
+
 
     # Detection
     with detection_graph.as_default():
@@ -263,6 +297,7 @@ def main(args):
 
                     num_detections_ = num_detections.astype(int)[0]
 
+
                     # Visualization of the results of a detection.
 
                     image_np = display_objects_distances(
@@ -274,10 +309,7 @@ def main(args):
                         np.squeeze(scores),
                         category_index)
 
-                    fps = 1 / (time.time() - last_time)
-                    print(fps)
                     cv2.imshow('ZED object detection', cv2.resize(image_np, (width, height)))
-                    last_time = time.time()
                     if cv2.waitKey(10) & 0xFF == ord('q'):
                         cv2.destroyAllWindows()
                         exit_signal = True
@@ -288,7 +320,9 @@ def main(args):
 
     exit_signal = True
     capture_thread.join()
+    # drawPlot()
 
 
 if __name__ == '__main__':
     main(sys.argv)
+
