@@ -176,7 +176,7 @@ def display_objects_distances(image_np, depth_np, num_detections, boxes_, classe
 
 
 def main(args):
-    last_time = 0
+    # last_time = 0
     svo_filepath = None
     if len(args) > 1:
         svo_filepath = args[1]
@@ -274,10 +274,10 @@ def main(args):
                         np.squeeze(scores),
                         category_index)
 
-                    fps = 1 / (time.time() - last_time)
-                    print(fps)
+                    # fps = 1 / (time.time() - last_time)
+                    # print(fps)
                     cv2.imshow('ZED object detection', cv2.resize(image_np, (width, height)))
-                    last_time = time.time()
+                    # last_time = time.time()
                     if cv2.waitKey(10) & 0xFF == ord('q'):
                         cv2.destroyAllWindows()
                         exit_signal = True
