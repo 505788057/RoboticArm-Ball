@@ -8,7 +8,6 @@ import statistics
 import math
 import tarfile
 import os.path
-import time
 
 from threading import Lock, Thread
 from time import sleep
@@ -74,6 +73,7 @@ def capture_thread_func(svo_filepath=None):
     init_params.coordinate_units = sl.UNIT.METER
     init_params.svo_real_time_mode = False
 
+
     # Open the camera
     err = zed.open(init_params)
     print(err)
@@ -121,6 +121,7 @@ def display_objects_distances(image_np, depth_np, num_detections, boxes_, classe
                 display_str = '{}: {}%'.format(display_str, int(100 * scores_[i]))
 
             # Find object distance
+            # print(box)
             ymin, xmin, ymax, xmax = box
             x_center = int(xmin * width + (xmax - xmin) * width * 0.5)
             y_center = int(ymin * height + (ymax - ymin) * height * 0.5)
@@ -138,6 +139,8 @@ def display_objects_distances(image_np, depth_np, num_detections, boxes_, classe
             if max_y_r > height: max_y_r = height
             if max_x_r > width: max_x_r = width
 
+            print(min_y_r,max_y_r)
+
             for j_ in range(min_y_r, max_y_r):
                 for i_ in range(min_x_r, max_x_r):
                     z = depth_np[j_, i_, 2]
@@ -146,12 +149,14 @@ def display_objects_distances(image_np, depth_np, num_detections, boxes_, classe
                         y_vect.append(depth_np[j_, i_, 1])
                         z_vect.append(z)
 
+            # print(x_vect, y_vect, z_vect)
+
             if len(x_vect) > 0:
                 x = statistics.median(x_vect)
                 y = statistics.median(y_vect)
                 z = statistics.median(z_vect)
-                # print('x:', int(x * 1000), 'y:', int(y * 1000), 'z:', int(z * 1000))
-
+                # print(x, y, z)
+                
                 distance = math.sqrt(x * x + y * y + z * z)
 
                 display_str = display_str + " " + str('% 6.2f' % distance) + " m "
@@ -159,6 +164,7 @@ def display_objects_distances(image_np, depth_np, num_detections, boxes_, classe
                 box_to_color_map[box] = vis_util.STANDARD_COLORS[classes_[i] % len(vis_util.STANDARD_COLORS)]
 
     for box, color in box_to_color_map.items():
+        print(box)
         ymin, xmin, ymax, xmax = box
 
         vis_util.draw_bounding_box_on_image_array(
@@ -176,7 +182,6 @@ def display_objects_distances(image_np, depth_np, num_detections, boxes_, classe
 
 
 def main(args):
-    # last_time = 0
     svo_filepath = None
     if len(args) > 1:
         svo_filepath = args[1]
@@ -231,6 +236,7 @@ def main(args):
                                                                 use_display_name=True)
     category_index = label_map_util.create_category_index(categories)
 
+
     # Detection
     with detection_graph.as_default():
         with tf.compat.v1.Session(config=config, graph=detection_graph) as sess:
@@ -263,6 +269,8 @@ def main(args):
 
                     num_detections_ = num_detections.astype(int)[0]
 
+                    # print(num_detections_)
+
                     # Visualization of the results of a detection.
 
                     image_np = display_objects_distances(
@@ -274,10 +282,7 @@ def main(args):
                         np.squeeze(scores),
                         category_index)
 
-                    # fps = 1 / (time.time() - last_time)
-                    # print(fps)
                     cv2.imshow('ZED object detection', cv2.resize(image_np, (width, height)))
-                    # last_time = time.time()
                     if cv2.waitKey(10) & 0xFF == ord('q'):
                         cv2.destroyAllWindows()
                         exit_signal = True
@@ -292,3 +297,4 @@ def main(args):
 
 if __name__ == '__main__':
     main(sys.argv)
+
