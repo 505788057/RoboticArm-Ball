@@ -44,6 +44,7 @@ lock = Lock()
 # height = 416
 width = 1280
 height = 720
+
 confidence = 0.55
 
 image_np_global = np.zeros([width, height, 3], dtype=np.uint8)
