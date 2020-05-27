@@ -6,7 +6,6 @@ import tensorflow as tf
 import collections
 import statistics
 import math
-import tarfile
 import os.path
 
 from threading import Lock, Thread

@@ -108,7 +108,7 @@ timelist = []
 
 
 def display_objects_distances(image_np, depth_np, num_detections, boxes_, classes_, scores_, category_index):
-    global xlist, ylist, zlist, timelist
+    global xlist, ylist, zlist
     box_to_display_str_map = collections.defaultdict(list)
     box_to_color_map = collections.defaultdict(str)
 
@@ -156,10 +156,11 @@ def display_objects_distances(image_np, depth_np, num_detections, boxes_, classe
                 x = statistics.median(x_vect)
                 y = statistics.median(y_vect)
                 z = statistics.median(z_vect)
-                # xlist.append(x)
-                # ylist.append(y)
-                # zlist.append(z)
-                # timelist.append(time.time())
+                xlist.append(x)
+                ylist.append(y)
+                zlist.append(z)
+                timelist.append(time.time())
+
 
                 distance = math.sqrt(x * x + y * y + z * z)
                 display_str = 'x:'+ str('% 4.3f' % x) + ' y:'+ str('% 4.3f' % y) + ' z:'+ str('% 4.3f' % z)
@@ -288,12 +289,12 @@ def main(args):
             sess.close()
 
     exit_signal = True
-    # filename = 'write_data.txt'
-    # with open(filename, 'a') as f:  # 如果filename不存在会自动创建， 'w'表示写数据，写之前会清空文件中的原有数据！
-    #     f.write(str(xlist) + '\n')
-    #     f.write(str(ylist) + '\n')
-    #     f.write(str(zlist) + '\n')
-    #     f.write(str(timelist) + '\n')
+    filename = 'write_data.txt'
+    with open(filename, 'a') as f:  # 如果filename不存在会自动创建， 'w'表示写数据，写之前会清空文件中的原有数据！
+        f.write(str(xlist) + '\n')
+        f.write(str(ylist) + '\n')
+        f.write(str(zlist) + '\n')
+        f.write(str(timelist) + '\n')
     capture_thread.join()
 
 
