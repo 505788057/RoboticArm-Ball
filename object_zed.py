@@ -8,7 +8,7 @@ import statistics
 import math
 import tarfile
 import os.path
-
+import CaliPlot
 from threading import Lock, Thread
 from time import sleep
 import time
@@ -44,6 +44,8 @@ lock = Lock()
 # height = 416
 width = 1280
 height = 720
+# width = 672
+# height = 376
 
 confidence = 0.55
 
@@ -112,7 +114,7 @@ def display_objects_distances(image_np, depth_np, num_detections, boxes_, classe
     box_to_display_str_map = collections.defaultdict(list)
     box_to_color_map = collections.defaultdict(str)
 
-    research_distance_box = 30
+    research_distance_box = 20
 
     for i in range(num_detections):
         if scores_[i] > confidence:
@@ -130,6 +132,7 @@ def display_objects_distances(image_np, depth_np, num_detections, boxes_, classe
             ymin, xmin, ymax, xmax = box
             x_center = int(xmin * width + (xmax - xmin) * width * 0.5)
             y_center = int(ymin * height + (ymax - ymin) * height * 0.5)
+
             x_vect = []
             y_vect = []
             z_vect = []
@@ -138,16 +141,26 @@ def display_objects_distances(image_np, depth_np, num_detections, boxes_, classe
             min_x_r = max(int(xmin * width), int(x_center - research_distance_box))
             max_y_r = min(int(ymax * height), int(y_center + research_distance_box))
             max_x_r = min(int(xmax * width), int(x_center + research_distance_box))
+            # print(max_y_r - min_y_r)
+            # print(max_x_r - min_x_r)
 
             if min_y_r < 0: min_y_r = 0
             if min_x_r < 0: min_x_r = 0
             if max_y_r > height: max_y_r = height
             if max_x_r > width: max_x_r = width
 
+            # x_vect.append(depth_np[y_center,x_center,  0])
+            # y_vect.append(depth_np[y_center,x_center,  1])
+            # z_vect.append(depth_np[y_center,x_center,  2])
             for j_ in range(min_y_r, max_y_r):
                 for i_ in range(min_x_r, max_x_r):
+                    # print(depth_np)
                     z = depth_np[j_, i_, 2]
+                    # 如果ｚ不是空值或者不是无限大的数字
                     if not np.isnan(z) and not np.isinf(z):
+                        # print(depth_np[j_, i_, 0])
+                        # print(depth_np[j_, i_, 1])
+                        # print(z)
                         x_vect.append(depth_np[j_, i_, 0])
                         y_vect.append(depth_np[j_, i_, 1])
                         z_vect.append(z)
@@ -161,9 +174,8 @@ def display_objects_distances(image_np, depth_np, num_detections, boxes_, classe
                 zlist.append(z)
                 timelist.append(time.time())
 
-
                 distance = math.sqrt(x * x + y * y + z * z)
-                display_str = 'x:'+ str('% 4.3f' % x) + ' y:'+ str('% 4.3f' % y) + ' z:'+ str('% 4.3f' % z)
+                display_str = 'x:' + str('% 4.3f' % x) + ' y:' + str('% 4.3f' % y) + ' z:' + str('% 4.3f' % z)
                 display_str = display_str + " " + str('% 6.2f' % distance) + " m "
                 print(display_str)
                 box_to_display_str_map[box].append(display_str)
@@ -232,7 +244,7 @@ def main(args):
 
     # Limit to a maximum of 50% the GPU memory usage taken by TF https://www.tensorflow.org/guide/using_gpu
     config = tf.compat.v1.ConfigProto()
-    config.gpu_options.per_process_gpu_memory_fraction = 0.7
+    config.gpu_options.per_process_gpu_memory_fraction = 0.6
 
     # Loading label map
     label_map = label_map_util.load_labelmap(PATH_TO_LABELS)
@@ -268,18 +280,20 @@ def main(args):
                         feed_dict={image_tensor: image_np_expanded})
 
                     num_detections_ = num_detections.astype(int)[0]
-
+                    if num_detections_> 0 :
                     # Visualization of the results of a detection.
-                    image_np = display_objects_distances(
-                        image_np,
-                        depth_np,
-                        num_detections_,
-                        np.squeeze(boxes),
-                        np.squeeze(classes).astype(np.int32),
-                        np.squeeze(scores),
-                        category_index)
-
+                        image_np = display_objects_distances(
+                            image_np,
+                            depth_np,
+                            num_detections_,
+                            np.squeeze(boxes),
+                            np.squeeze(classes).astype(np.int32),
+                            np.squeeze(scores),
+                            category_index)
+                    else:
+                        print('Do not detect.')
                     cv2.imshow('ZED object detection', cv2.resize(image_np, (width, height)))
+                    # sleep(1)
                     if cv2.waitKey(10) & 0xFF == ord('q'):
                         cv2.destroyAllWindows()
                         exit_signal = True
@@ -289,12 +303,13 @@ def main(args):
             sess.close()
 
     exit_signal = True
-    filename = 'write_data.txt'
-    with open(filename, 'a') as f:  # 如果filename不存在会自动创建， 'w'表示写数据，写之前会清空文件中的原有数据！
-        f.write(str(xlist) + '\n')
-        f.write(str(ylist) + '\n')
-        f.write(str(zlist) + '\n')
-        f.write(str(timelist) + '\n')
+    # CaliPlot.list2array(xlist, ylist, zlist, timelist)
+    # filename = 'write_data.txt'
+    # with open(filename, 'a') as f:  # 如果filename不存在会自动创建， 'w'表示写数据，写之前会清空文件中的原有数据！
+    #     f.write(str(xlist) + '\n')
+    #     f.write(str(ylist) + '\n')
+    #     f.write(str(zlist) + '\n')
+    #     f.write(str(timelist) + '\n')
     capture_thread.join()
 
 

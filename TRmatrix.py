@@ -70,11 +70,11 @@ def Get3DR_TransMatrix(srcPoints, dstPoints):
     return matR, TraMatrix, R_T
 
 
-# srcPoints = np.array(([-49., 149., 595.], [-60, -336, -143], [901, 1024, 968]))
-# dstPoints = np.array(([726.46, 732.03, 547.54], [929.69, 696.64, 306.93], [161.81, 457.81, 255.92]))
+zedPoints = np.array(([-49., 149., 595.], [-60, -336, -143], [901, 1024, 968]))
+kukaPoints = np.array(([726.46, 732.03, 547.54], [929.69, 696.64, 306.93], [161.81, 457.81, 255.92]))
 # zedPoints = np.array(([100., 0., 0.], [0., 100., 0.], [0., 0., 100.]))
 # kukaPoints = np.array(([50., -50., 50.], [100., 0., 0.], [0., 0., 100.]))
-zedPoints, kukaPoints= parserTR.fetch_arguments()
+# zedPoints, kukaPoints= parserTR.fetch_arguments()
 
 test = np.array(([127.], [-487.], [1372.]))
 rotation_matrix, transfer_matrix, c = Get3DR_TransMatrix(zedPoints, kukaPoints)
