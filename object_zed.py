@@ -1,3 +1,10 @@
+"""
+:Author:  Vitae
+:Create:  2020/7/5 11:19
+:Methed: Using the fast-rcnn method to identify the special ball. All of those use the zed2 data.
+Copyright (c) 2020, Vitae Group All Rights Reserved.
+"""
+
 import numpy as np
 import os
 import six.moves.urllib as urllib

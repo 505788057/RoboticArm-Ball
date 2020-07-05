@@ -1,3 +1,10 @@
+"""
+:Author:  Vitae
+:Create:  2020/7/5 11:14
+:Methed:  using the least square method to fit the curve
+Copyright (c) 2020, Vitae Group All Rights Reserved.
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib as mpl

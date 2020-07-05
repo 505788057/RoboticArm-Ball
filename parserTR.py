@@ -1,3 +1,11 @@
+"""
+:Author:  Vitae
+:Create:  2020/7/5 11:22
+:Methed: The positon of the Robot arm and zed2 are always moving. The Transfer matrix and Rotation matrix are changing.
+        so this script can calculate the TR matrix by three sets of points.
+Copyright (c) 2020, Vitae Group All Rights Reserved.
+"""
+
 import numpy as np
 import os
 
